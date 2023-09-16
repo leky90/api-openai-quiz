@@ -55,6 +55,9 @@ app.get('/api/get-quizzes', async (req, res) => {
   const totalCss = Number(req.query.totalCss) || BASE_QUIZ;
   const totalQuestions = totalCss + totalJs + totalHtml;
 
+  if (totalQuestions === 0)
+    return res.status(500).json({ success: false, data: [] });
+
   const prompt = `Create ${totalQuestions} multiple choice questions about knowledge of Javascript, CSS, and HTML, the difficulty of the question is "Beginner" or "Elementary" or "Intermediate" or "Above Intermediate" or "Advanced" or "Proficient" questions cannot be duplicated, the number of questions about Javascript is ${totalJs}, the number of questions about HTML is ${totalHtml}, the number of questions about CSS is ${totalCss}, there may be one or more correct options, accompanied by an explanation for the correct answer. Provide output in minify JSON format as follows:
   
   {
@@ -79,12 +82,13 @@ app.get('/api/get-quizzes', async (req, res) => {
     });
 
     if (!chatCompletion.choices[0].message.content)
-      return res.json({ success: false, data: [] });
+      return res.status(500).json({ success: false, data: [] });
 
     const result: { questions: Quiz[]; answers: [] } = JSON.parse(
       chatCompletion.choices[0].message.content
     );
     const questions = result.questions;
+
     const quizId = chatCompletion.id.replace('chatcmpl-', '');
 
     redis.set(quizId, result.answers, {
@@ -93,7 +97,7 @@ app.get('/api/get-quizzes', async (req, res) => {
 
     console.log('token usage', chatCompletion.usage);
 
-    return res.json({ success: true, data: { questions, quizId } });
+    return res.status(200).json({ success: true, data: { questions, quizId } });
   } catch (error) {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
