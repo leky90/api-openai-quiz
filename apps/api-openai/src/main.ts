@@ -28,7 +28,7 @@ export const openai = new OpenAI({
 });
 
 const BASE_COUNTDOWN = 20;
-const BASE_QUIZ = 5;
+const BASE_QUIZ = 0;
 
 const app = express();
 app.use(cors());
